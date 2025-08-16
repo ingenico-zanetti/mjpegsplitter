@@ -56,7 +56,7 @@ static void analyze_and_forward(parserContext_s *context, const uint8_t *buffer,
 			context->outputBuffer[context->outputBufferIndex++] = octet;
 		}else{
 			// the 'picture' doesn't fit into our buffer
-			printf("discard buffer (index=%d)" "\n", context->outputBufferIndex = 0); 
+			printf("discard buffer" "\n"); 
 			context->outputBufferIndex = 0;
 			context->index = 0;
 		}
