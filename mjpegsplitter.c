@@ -64,9 +64,13 @@ static void analyze_and_forward(parserContext_s *context, const uint8_t *buffer,
 			ssize_t lengthToFlush = context->outputBufferIndex - 4;
 			if(lengthToFlush > 0){
 				char filename[256];
-				time_t t = time(NULL);
+				char localtime_str[32];
+				struct timeval tv;
+				gettimeofday(&tv, NULL);
+				time_t t = (time_t)tv.tv_sec;
 				struct tm *tmp = localtime(&t);
-				strftime(filename, sizeof(filename) - 1, "%F_%T.JPEG", tmp); 
+				strftime(localtime_str, sizeof(localtime_str) - 1, "%F_%T", tmp); 
+				snprintf(filename, sizeof(filename) - 1, "%s" "_" "%06lu.JPEG", localtime_str, tv.tv_usec);
 				int fd = open(filename, O_CREAT|O_RDWR, 0666);
 				fprintf(stderr, "open(%s)=>%d" "\n", filename, fd);
 				if(lengthToFlush != write(fd, context->outputBuffer, lengthToFlush)){
