@@ -69,7 +69,7 @@ static void analyze_and_forward(parserContext_s *context, const uint8_t *buffer,
 				gettimeofday(&tv, NULL);
 				time_t t = (time_t)tv.tv_sec;
 				struct tm *tmp = localtime(&t);
-				strftime(localtime_str, sizeof(localtime_str) - 1, "%F_%T", tmp); 
+				strftime(localtime_str, sizeof(localtime_str) - 1, "%F_%Hh%Mm%Ss", tmp); 
 				snprintf(filename, sizeof(filename) - 1, "%s" "_" "%06lu.JPEG", localtime_str, tv.tv_usec);
 				int fd = open(filename, O_CREAT|O_RDWR, 0666);
 				fprintf(stderr, "open(%s)=>%d" "\n", filename, fd);
