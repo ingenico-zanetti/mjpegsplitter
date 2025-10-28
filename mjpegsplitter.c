@@ -25,12 +25,16 @@ typedef struct {
 	int index;
 	uint8_t *outputBuffer;
 	ssize_t outputBufferIndex;
+	const char *pattern;
+	int count;
 } parserContext_s;
 
-static void contextInitialize(parserContext_s *context){
+static void contextInitialize(parserContext_s *context, const char *pattern){
 	context->index = 0;
 	context->outputBuffer = (uint8_t *)malloc(BUFFER_SIZE);
 	context->outputBufferIndex = 0;
+	context->pattern = pattern;
+	context->count = 0;
 }
 
 static void analyze_and_forward(parserContext_s *context, const uint8_t *buffer, ssize_t length){
@@ -64,13 +68,18 @@ static void analyze_and_forward(parserContext_s *context, const uint8_t *buffer,
 			ssize_t lengthToFlush = context->outputBufferIndex - 4;
 			if(lengthToFlush > 0){
 				char filename[256];
-				char localtime_str[32];
-				struct timeval tv;
-				gettimeofday(&tv, NULL);
-				time_t t = (time_t)tv.tv_sec;
-				struct tm *tmp = localtime(&t);
-				strftime(localtime_str, sizeof(localtime_str) - 1, "%F_%Hh%Mm%Ss", tmp); 
-				snprintf(filename, sizeof(filename) - 1, "%s" "_" "%06lu.JPEG", localtime_str, tv.tv_usec);
+				if(NULL == context->pattern){
+					char localtime_str[32];
+					struct timeval tv;
+					gettimeofday(&tv, NULL);
+					time_t t = (time_t)tv.tv_sec;
+					struct tm *tmp = localtime(&t);
+					strftime(localtime_str, sizeof(localtime_str) - 1, "%F_%Hh%Mm%Ss", tmp); 
+					snprintf(filename, sizeof(filename) - 1, "%s" "_" "%06lu.JPEG", localtime_str, tv.tv_usec);
+				}else{
+					snprintf(filename, sizeof(filename) - 1, context->pattern, context->count);
+					context->count++;
+				}
 				int fd = open(filename, O_CREAT|O_RDWR, 0666);
 				fprintf(stderr, "open(%s)=>%d" "\n", filename, fd);
 				if(lengthToFlush != write(fd, context->outputBuffer, lengthToFlush)){
@@ -87,9 +96,13 @@ static void analyze_and_forward(parserContext_s *context, const uint8_t *buffer,
 int main(int argc, const char *argv[]){
 	int in  = STDIN_FILENO;
 	uint8_t *buffer = (uint8_t *)malloc(BUFFER_SIZE);
+	const char *pattern = NULL;
+	if(argc > 1){
+		pattern = argv[1];
+	}
 	if(buffer != NULL){
 		parserContext_s context;
-		contextInitialize(&context);
+		contextInitialize(&context, pattern);
 		for(;;){
 			void updateMax(int *m, int n){
 				int max = *m;
